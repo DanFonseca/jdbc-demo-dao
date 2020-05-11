@@ -10,12 +10,15 @@ public class DB {
 
     private static Connection conn;
 
-    public static Connection getConnection () throws SQLException{
+    public static Connection getConnection (){
 
         Properties pros = getProperties();
         String url = pros.getProperty("dburl");
-        conn = DriverManager.getConnection(url, pros);
-
+        try {
+            conn = DriverManager.getConnection(url, pros);
+        }catch (SQLException e){
+            throw new DBException(e.getMessage());
+        }
         return conn;
     }
 
