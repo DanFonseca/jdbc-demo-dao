@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.BlockingDeque;
 
 
 public class SellerDAOJDBC implements SellerDAO {
@@ -62,12 +63,58 @@ public class SellerDAOJDBC implements SellerDAO {
 
     @Override
     public void update(Seller seller) {
+        PreparedStatement st = null;
+        ResultSet rs = null;
+
+
+        try{
+            st = conn.prepareStatement("UPDATE  seller as s " +
+                    "set "+
+                    "s.name= ?, " +
+                    "s.Email = ?, "+
+                    "s.BirthDate = ?, "+
+                    "s.BaseSalary  = ?, "+
+                    "DepartmentId = ? "+
+                    "where  s.Id = ?");
+
+            st.setString(1, seller.getName());
+            st.setString(2, seller.getEmail());
+            st.setDate(3,  new Date(seller.getBirthDate().getTime()));
+            st.setDouble(4, seller.getBaseSalary());
+            st.setInt(5, seller.getDepartment().getId());
+            st.setInt(6, seller.getId());
+
+            int rowsAffected = st.executeUpdate();
+            if(rowsAffected > 0){
+                System.out.println("Done! Rows Affected: " + rowsAffected);
+            }else{
+                throw  new DBException("None rows affected");
+            }
+
+        }catch (SQLException e){
+            throw new DBException(e.getMessage());
+        }
 
     }
 
     @Override
     public void deleteById(Integer id) {
+        PreparedStatement st = null;
 
+        try{
+            st = conn.prepareStatement("delete from seller as s " +
+                    " where s.Id = ?");
+            st.setInt(1, id);
+
+            int rowsAffected = st.executeUpdate();
+            if(rowsAffected > 0){
+                System.out.println("Done! Rows Affected: " + rowsAffected);
+            }else{
+                throw new DBException("None rows affected");
+            }
+        }catch (SQLException e){
+            throw new DBException(e.getMessage());
+        }
     }
 
     @Override
@@ -81,8 +128,8 @@ public class SellerDAOJDBC implements SellerDAO {
             st = conn.prepareStatement("select s.*, d.Id, d.Name as dpName " +
                     "FROM seller as s " +
                     "inner join department as d " +
-                    "on s.Id = d.Id " +
-                    "where d.Id = ?");
+                    "on s.DepartmentId = d.Id " +
+                    "where s.Id = ?");
             st.setInt(1, id);
             rs = st.executeQuery();
 
